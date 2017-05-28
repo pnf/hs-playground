@@ -1,0 +1,22 @@
+import Data.STRef
+import Data.Vector (fromList, toList, freeze, thaw)
+import Control.Monad
+import Data.Vector.Mutable (STVector, read, write, swap)
+import qualified Data.Vector as V (Vector, length)
+import Data.List (sortOn)
+import Prelude hiding (read)
+
+-- vector = fromList contents
+partitionFirst   :: Ord a => Vector.Mutable.MVector s a -> Int -> Int -> GHC.ST.ST s Int
+partitionFirst array l r = do
+      p <- read array l
+      i <- newSTRef (l+1)
+      forM_ [l+1..(r-1)] $ \j -> do
+        arrayJ <- read array j
+        i'     <- readSTRef i
+        when (arrayJ < p) $ do
+              swap array i' j
+              modifySTRef' i (+1)
+      i' <- readSTRef i
+      swap array (i'-1) l
+      return (i'-1)
